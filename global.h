@@ -30,6 +30,9 @@ typedef unsigned int uint;
 typedef unsigned long long ll;
 #define damping_factor 0.85
 #define threshold 0.001
+//#define heap_factor 0.005
+#define package_num 10
+#define package_interval 5
 
 struct OutEdge {
     uint end;
@@ -49,5 +52,10 @@ struct EdgeWeighted {
     uint source;
     uint end;
     uint w8;
+};
+
+struct Node {
+    uint ID;
+    uint value;
 };
 #endif //GRAPH_ALGORITHM_GLOBAL_H

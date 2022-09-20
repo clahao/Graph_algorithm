@@ -4,8 +4,8 @@ project(Graph_algorithm)
 set(CMAKE_CXX_STANDARD 14)
 
 include_directories(.)
-set(CMAKE_CXX_FLAGS "-fopenmp")
-add_compile_definitions(OPENMP)
+#set(CMAKE_CXX_FLAGS "-fopenmp")
+#add_compile_definitions(OPENMP)
 
 
 add_executable(pagerank_sync
@@ -35,3 +35,13 @@ add_executable(cc_async
 add_executable(weighted_generator
         weighted_generator.cpp
         global.h)
+
+add_executable(test
+        test.cpp
+        global.h Index_Min_PriorityQueue.cpp )
+
+add_executable(bfs_async_priority_schedule
+        app_async_priority_schedule/bfs_async.cpp timer.cpp)
+
+add_executable(sssp_async_priority_schedule
+        app_async_priority_schedule/sssp_async.cpp timer.cpp)
