@@ -73,38 +73,45 @@
 
 template<class E>
 void __attribute__((linx_kernel, noinline))
-bfs_async(uint *offset, E *edgeList, uint *outDegree, uint *value, queue<pair<uint,uint>> *queue){
+bfs_async(uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, queue<uint> *queue){
     bool finished = false;
     uint priority = 0;
     uint min_prior;
 
     while (!finished || priority < package_num){
         finished = true;
-        uint id = queue[priority].front().first;
-        uint Dist = queue[priority].front().second;
+        uint id = queue[priority].front();
         queue[priority].pop();
-        min_prior = priority;
-        //value[id] = Dist;
-        uint nbegin = offset[id];
-        uint nend = nbegin + outDegree[id];
-        uint finalDist = Dist + 1;
 
-        for(uint j = nbegin; j < nend; j ++){
-            uint dest = edgeList[j].end;
-            if(finalDist < value[dest]){
-                finished = false;
-                value[dest] = finalDist;
-                uint prior = finalDist >> package_interval;
-                prior = prior < package_num ? prior : package_num - 1;
-                min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
-                queue[prior].push(make_pair(dest,finalDist));
+        if(active[id]){
+            active[id] = false;
+            uint Dist = value[id];
+            min_prior = priority;
+            //value[id] = Dist;
+            uint nbegin = offset[id];
+            uint nend = nbegin + outDegree[id];
+            uint finalDist = Dist + 1;
+
+            for(uint j = nbegin; j < nend; j ++){
+                uint dest = edgeList[j].end;
+                if(finalDist < value[dest]){
+                    active[dest] = true;
+                    finished = false;
+                    value[dest] = finalDist;
+                    uint prior = finalDist >> package_interval;
+                    prior = prior < package_num ? prior : package_num - 1;
+                    min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
+                    queue[prior].push(dest);
+                }
             }
+            priority = min_prior;
         }
-        priority = min_prior;
+
         while(priority < package_num && queue[priority].empty())
             priority++;
     }
 }
+
 
 //template<class E>
 //void __attribute__((linx_kernel, noinline))
@@ -139,34 +146,40 @@ bfs_async(uint *offset, E *edgeList, uint *outDegree, uint *value, queue<pair<ui
 
 template<class E>
 void __attribute__((linx_kernel, noinline))
-sssp_async(uint *offset, E *edgeList, uint *outDegree, uint *value, queue<pair<uint,uint>> *queue){
+sssp_async(uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, queue<uint> *queue){
     bool finished = false;
     uint priority = 0;
     uint min_prior;
 
     while (!finished || priority < package_num){
         finished = true;
-        uint id = queue[priority].front().first;
-        uint Dist = queue[priority].front().second;
+        uint id = queue[priority].front();
         queue[priority].pop();
-        min_prior = priority;
-        //value[id] = Dist;
-        uint nbegin = offset[id];
-        uint nend = nbegin + outDegree[id];
 
-        for(uint j = nbegin; j < nend; j ++){
-            uint dest = edgeList[j].end;
-            uint finalDist = Dist + edgeList[j].w8;
-            if(finalDist < value[dest]){
-                finished = false;
-                value[dest] = finalDist;
-                uint prior = finalDist >> package_interval;
-                prior = prior < package_num ? prior : package_num - 1;
-                min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
-                queue[prior].push(make_pair(dest,finalDist));
+        if(active[id]){
+            active[id] = false;
+            uint Dist = value[id];
+            min_prior = priority;
+            //value[id] = Dist;
+            uint nbegin = offset[id];
+            uint nend = nbegin + outDegree[id];
+
+            for(uint j = nbegin; j < nend; j ++){
+                uint dest = edgeList[j].end;
+                uint finalDist = Dist + edgeList[j].w8;
+                if(finalDist < value[dest]){
+                    active[dest] = true;
+                    finished = false;
+                    value[dest] = finalDist;
+                    uint prior = finalDist >> package_interval;
+                    prior = prior < package_num ? prior : package_num - 1;
+                    min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
+                    queue[prior].push(dest);
+                }
             }
+            priority = min_prior;
         }
-        priority = min_prior;
+
         while(priority < package_num && queue[priority].empty())
             priority++;
     }

@@ -11,20 +11,22 @@
 int main(int argc, char ** argv){
     string filename(argv[1]);
     Graph<OutEdge> graph(filename, false);
-    int sourceNode = 0;
+    uint sourceNode = 0;
 
     for(unsigned int i = 0; i < graph.num_nodes; i ++){
         graph.value[i] = DIST_INFINITY;
+        graph.label1[i] = false;
     }
     graph.value[sourceNode] = 0;
+    graph.label1[sourceNode] = true;
 //    IndexMinPriorityQueue<uint> queue(graph.num_nodes);
 //    queue.insert(sourceNode,0);
 //    queue<int> queue;
 //    queue.push(sourceNode);
 //    graph.value[sourceNode] = 0;
 //    graph.label1[sourceNode] = true;
-    queue<pair<uint,uint>> queue[package_num];
-    queue[0].push(make_pair(sourceNode,0));
+    queue<uint> queue[package_num];
+    queue[0].push(sourceNode);
     Timer timer;
     timer.Start();
 
@@ -32,6 +34,7 @@ int main(int argc, char ** argv){
               graph.edgeList,
               graph.outDegree,
               graph.value,
+              graph.label1,
               queue);
 
     float runtime = timer.Finish();
