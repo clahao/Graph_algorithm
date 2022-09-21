@@ -45,3 +45,6 @@ add_executable(bfs_async_priority_schedule
 
 add_executable(sssp_async_priority_schedule
         app_async_priority_schedule/sssp_async.cpp timer.cpp)
+
+add_executable(cc_async_priority_schedule
+        app_async_priority_schedule/cc_async.cpp timer.cpp)

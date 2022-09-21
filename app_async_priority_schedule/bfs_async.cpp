@@ -35,7 +35,7 @@ int main(int argc, char ** argv){
               graph.outDegree,
               graph.value,
               graph.label1,
-              queue);
+               queue);
 
     float runtime = timer.Finish();
     cout << "Processing finished in " << runtime/1000 << " (s).\n";

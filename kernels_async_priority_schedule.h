@@ -6,6 +6,7 @@
 #define GRAPH_ALGORITHM_KERNELS_ASYNC_PRIORITY_SCHEDULE_H
 
 #include <queue>
+#include "global.h"
 //#include "Index_Min_PriorityQueue.h"
 //#include "Index_Min_PriorityQueue.cpp"
 
@@ -77,6 +78,7 @@ bfs_async(uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active,
     bool finished = false;
     uint priority = 0;
     uint min_prior;
+    uint update_times = 0;
 
     while (!finished || priority < package_num){
         finished = true;
@@ -95,6 +97,7 @@ bfs_async(uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active,
             for(uint j = nbegin; j < nend; j ++){
                 uint dest = edgeList[j].end;
                 if(finalDist < value[dest]){
+                    update_times ++;
                     active[dest] = true;
                     finished = false;
                     value[dest] = finalDist;
@@ -110,38 +113,8 @@ bfs_async(uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active,
         while(priority < package_num && queue[priority].empty())
             priority++;
     }
+    cout<<"update times: "<<update_times<<endl;
 }
-
-
-//template<class E>
-//void __attribute__((linx_kernel, noinline))
-//sssp_async(uint *offset, E *edgeList, uint *outDegree, uint *value, IndexMinPriorityQueue<uint> queue){
-//
-//    while (!queue.isEmpty()){
-//        int id = queue.minIndex();
-//        uint Dist = queue.items[id];
-//        queue.delMin();
-//        if(Dist < value[id]){
-//            value[id] = Dist;
-//            uint nbegin = offset[id];
-//            uint nend = nbegin + outDegree[id];
-//
-//            for(uint j = nbegin; j < nend; j ++){
-//                uint dest = edgeList[j].end;
-//                uint finalDist = Dist + edgeList[j].w8;
-//                //cout<< finalDist <<endl;
-//                if(finalDist < value[dest]){
-//                    if(!queue.contains(dest))
-//                        queue.insert(dest,finalDist);
-//                    else if(finalDist < queue.items[dest])
-//                        queue.changeItem(dest, finalDist);
-//                }
-//            }
-//        }
-//
-//    }
-//}
-
 
 
 template<class E>
@@ -150,6 +123,7 @@ sssp_async(uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active
     bool finished = false;
     uint priority = 0;
     uint min_prior;
+    uint update_times = 0;
 
     while (!finished || priority < package_num){
         finished = true;
@@ -168,6 +142,7 @@ sssp_async(uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active
                 uint dest = edgeList[j].end;
                 uint finalDist = Dist + edgeList[j].w8;
                 if(finalDist < value[dest]){
+                    update_times ++;
                     active[dest] = true;
                     finished = false;
                     value[dest] = finalDist;
@@ -183,8 +158,42 @@ sssp_async(uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active
         while(priority < package_num && queue[priority].empty())
             priority++;
     }
+    cout<<"update times: "<<update_times<<endl;
 }
 
+
+template<class E>
+void __attribute__((linx_kernel, noinline))
+cc_async(uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, queue<uint> queue){
+
+    uint update_times = 0;
+
+    for(uint i = 0; i < num_nodes; i ++){
+
+        if(active[i]){
+            active[i] = false;
+            queue.push(i);
+
+            while(!queue.empty()){
+                uint id = queue.front();
+                queue.pop();
+                uint nbegin = offset[id];
+                uint nend = nbegin + outDegree[id];
+
+                for(uint j = nbegin; j < nend; j ++){
+                    uint dest = edgeList[j].end;
+                    if(value[id] < value[dest]){
+                        update_times ++;
+                        active[dest] = false;
+                        value[dest] = value[id];
+                        queue.push(dest);
+                    }
+                }
+            }
+        }
+    }
+    cout<<"update times: "<<update_times<<endl;
+}
 
 
 #endif //GRAPH_ALGORITHM_KERNELS_ASYNC_PRIORITY_SCHEDULE_H

@@ -43,6 +43,7 @@ void __attribute__((linx_kernel, noinline))
 bfs_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active){
 
     bool finished = false;
+    uint update_times = 0;
 
     while (!finished){
         finished = true;
@@ -57,6 +58,7 @@ bfs_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree
                 for(uint j = nbegin; j < nend; j ++){
                     uint dest = edgeList[j].end;
                     if(finalDist < value[dest]){
+                        update_times ++;
                         value[dest] = finalDist;
                         finished = false;
                         active[dest] = true;
@@ -66,6 +68,7 @@ bfs_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree
         }
         (*iter) ++;
     }
+    cout<<"update times: "<<update_times<<endl;
 }
 
 template<class E>
@@ -73,6 +76,7 @@ void __attribute__((linx_kernel, noinline))
 sssp_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active){
 
     bool finished = false;
+    uint update_times = 0;
 
     while (!finished){
         finished = true;
@@ -86,6 +90,7 @@ sssp_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegre
                 for(uint j = nbegin; j < nend; j ++){
                     uint finalDist = value[id] + edgeList[j].w8;
                     if(finalDist < value[edgeList[j].end]){
+                        update_times ++;
                         value[edgeList[j].end] = finalDist;
                         finished = false;
                         active[edgeList[j].end] = true;
@@ -95,6 +100,7 @@ sssp_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegre
         }
         (*iter) ++;
     }
+    cout<<"update times: "<<update_times<<endl;
 }
 
 template<class E>
@@ -102,6 +108,7 @@ void __attribute__((linx_kernel, noinline))
 cc_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active){
 
     bool finished = false;
+    uint update_times = 0;
 
     while (!finished){
         finished = true;
@@ -115,6 +122,7 @@ cc_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree,
                 for(uint j = nbegin; j < nend; j ++){
                     uint dest = edgeList[j].end;
                     if(value[id] < value[dest]){
+                        update_times ++;
                         value[dest] = value[id];
                         finished = false;
                         active[dest] = true;
@@ -124,6 +132,7 @@ cc_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree,
         }
         (*iter) ++;
     }
+    cout<<"update times: "<<update_times<<endl;
 }
 
 #endif //GRAPH_ALGORITHM_KERNELS_ASYNC_H

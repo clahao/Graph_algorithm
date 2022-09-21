@@ -11,7 +11,7 @@
 int main(int argc, char ** argv){
     string filename(argv[1]);
     Graph<OutEdgeWeighted> graph(filename, true);
-    uint sourceNode = 1;
+    uint sourceNode = 0;
 
     for(unsigned int i = 0; i < graph.num_nodes; i ++){
         graph.value[i] = DIST_INFINITY;
@@ -27,11 +27,11 @@ int main(int argc, char ** argv){
     timer.Start();
 
     sssp_async(graph.offset,
-              graph.edgeList,
-              graph.outDegree,
-              graph.value,
-              graph.label1,
-              queue);
+               graph.edgeList,
+               graph.outDegree,
+               graph.value,
+               graph.label1,
+                queue);
 
     float runtime = timer.Finish();
     cout << "Processing finished in " << runtime/1000 << " (s).\n";
