@@ -105,6 +105,7 @@ void __attribute__((linx_kernel, noinline))
 cc_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active){
 
     bool finished = false;
+    int update = 0;
 
     while (!finished){
         finished = true;
@@ -118,6 +119,7 @@ cc_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree,
                 for(uint j = nbegin; j < nend; j ++){
                     uint dest = edgeList[j].end;
                     if(value[id] < value[dest]){
+                        update++;
                         value[dest] = value[id];
                         finished = false;
                         active[dest] = true;
@@ -127,6 +129,7 @@ cc_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree,
         }
         (*iter) ++;
     }
+    cout << update << endl;
 }
 
 #endif //GRAPH_ALGORITHM_KERNELS_ASYNC_H

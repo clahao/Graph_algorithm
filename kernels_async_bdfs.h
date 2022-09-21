@@ -32,6 +32,27 @@ void rebfs(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *
 }
 
 template<class E>
+void recc(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, bool *finished) {
+    if (depth == MAX_BDFS_DEPTH)
+        return;
+    active[id] = false;
+    uint nbegin = offset[id];
+    uint nend = nbegin + outDegree[id];
+
+    for(uint j = nbegin; j < nend; j ++){
+        uint dest = edgeList[j].end;
+        if(value[id] < value[dest]){
+            update++;
+            value[dest] = value[id];
+            *finished = false;
+            active[dest] = true;
+        }
+        if (active[dest])
+            rebfs(dest, depth + 1, offset, edgeList, outDegree, value, active, finished);
+    }
+}
+
+template<class E>
 void __attribute__((linx_kernel, noinline))
 pagerank_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree, Adouble *value, Adouble *delta){
 
@@ -67,7 +88,6 @@ void __attribute__((linx_kernel, noinline))
 bfs_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active){
 
     bool finished = false;
-
     while (!finished){
         finished = true;
 
@@ -121,21 +141,11 @@ cc_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree,
 
         for(uint id = 0; id < num_nodes; id ++){
             if(active[id]){
-                active[id] = false;
-                uint nbegin = offset[id];
-                uint nend = nbegin + outDegree[id];
-
-                for(uint j = nbegin; j < nend; j ++){
-                    uint dest = edgeList[j].end;
-                    if(value[id] < value[dest]){
-                        value[dest] = value[id];
-                        finished = false;
-                        active[dest] = true;
-                    }
-                }
+                recc(id, 0, offset, edgeList, outDegree, value, active, &finished);
             }
         }
         (*iter) ++;
     }
+    cout << update << endl;
 }
 #endif //GRAPH_ALGORITHM_KERNELS_ASYNC_BDFS_H
