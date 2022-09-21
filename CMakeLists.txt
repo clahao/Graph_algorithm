@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.20)
 project(Graph_algorithm)
 
 set(CMAKE_CXX_STANDARD 14)
 
 include_directories(.)
 set(CMAKE_CXX_FLAGS "-fopenmp")
-add_compile_definitions(OPENMP)
+#add_compile_definitions(OPENMP)
 
 
 add_executable(pagerank_sync

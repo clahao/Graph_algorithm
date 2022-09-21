@@ -17,10 +17,12 @@
 #include <vector>
 #include <cmath>
 #include <chrono>
+#include <stack>
 #include <stdexcept>
 #include <sstream>
 #include <atomic>
 
+#define MAX_BDFS_DEPTH 10
 
 using namespace std;
 using Adouble = atomic<double>;

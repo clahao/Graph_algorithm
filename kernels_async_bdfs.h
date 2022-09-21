@@ -1,11 +1,35 @@
 //
-// Created by moyu on 2022/9/14.
+// Created by 58253 on 2022/9/18.
 //
 
-#ifndef GRAPH_ALGORITHM_KERNELS_ASYNC_H
-#define GRAPH_ALGORITHM_KERNELS_ASYNC_H
+#ifndef GRAPH_ALGORITHM_KERNELS_ASYNC_BDFS_H
+#define GRAPH_ALGORITHM_KERNELS_ASYNC_BDFS_H
 
 #include "global.h"
+
+int update = 0;
+
+template<class E>
+void rebfs(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, bool *finished) {
+    if (depth == MAX_BDFS_DEPTH)
+        return;
+    active[id] = false;
+    uint nbegin = offset[id];
+    uint nend = nbegin + outDegree[id];
+    uint finalDist = value[id] + 1;
+
+    for(uint j = nbegin; j < nend; j ++){
+        uint dest = edgeList[j].end;
+        if(finalDist < value[dest]){
+            update++;
+            value[dest] = finalDist;
+            *finished = false;
+            active[dest] = true;
+        }
+        if (active[dest])
+            rebfs(dest, depth + 1, offset, edgeList, outDegree, value, active, finished);
+    }
+}
 
 template<class E>
 void __attribute__((linx_kernel, noinline))
@@ -43,27 +67,13 @@ void __attribute__((linx_kernel, noinline))
 bfs_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active){
 
     bool finished = false;
-    int update = 0;
 
     while (!finished){
         finished = true;
 
         for(uint id = 0; id < num_nodes; id ++){
             if(active[id]){
-                active[id] = false;
-                uint nbegin = offset[id];
-                uint nend = nbegin + outDegree[id];
-                uint finalDist = value[id] + 1;
-
-                for(uint j = nbegin; j < nend; j ++){
-                    uint dest = edgeList[j].end;
-                    if(finalDist < value[dest]){
-                        update++;
-                        value[dest] = finalDist;
-                        finished = false;
-                        active[dest] = true;
-                    }
-                }
+                rebfs(id, 0, offset, edgeList, outDegree, value, active, &finished);
             }
         }
         (*iter) ++;
@@ -128,5 +138,4 @@ cc_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree,
         (*iter) ++;
     }
 }
-
-#endif //GRAPH_ALGORITHM_KERNELS_ASYNC_H
+#endif //GRAPH_ALGORITHM_KERNELS_ASYNC_BDFS_H

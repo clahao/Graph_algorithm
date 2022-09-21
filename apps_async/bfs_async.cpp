@@ -6,15 +6,16 @@
 #if defined(OPENMP)
 #include "../kernels_async_parallel.h"
 #else
-#include "../kernels_async.h"
+//#include "../kernels_async.h"
 //#include "../kernels_async_dev.h"
+#include "../kernels_async_bdfs.h"
 #endif
 #include "../timer.h"
 
 int main(int argc, char ** argv){
     string filename(argv[1]);
     Graph<OutEdge> graph(filename, false);
-    int sourceNode = 0;
+    int sourceNode = 1;
 
     for(unsigned int i = 0; i < graph.num_nodes; i ++){
         graph.value[i] = DIST_INFINITY;
