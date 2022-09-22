@@ -7,6 +7,7 @@
 
 #include <queue>
 #include "global.h"
+#include "timer.h"
 //#include "Index_Min_PriorityQueue.h"
 //#include "Index_Min_PriorityQueue.cpp"
 
@@ -71,14 +72,45 @@
 //        }
 //    }
 //}
+int update = 0;
+uint priority = 0;
+uint min_prior;
+
+template<class E>
+void rebfs(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, bool *finished, queue<uint> *queue) {
+    if (depth == MAX_BDFS_DEPTH)
+        return;
+    active[id] = false;
+    uint nbegin = offset[id];
+    uint nend = nbegin + outDegree[id];
+    uint finalDist = value[id] + 1;
+
+    for(uint j = nbegin; j < nend; j ++){
+        uint dest = edgeList[j].end;
+        if(finalDist < value[dest]){
+            update++;
+            value[dest] = finalDist;
+            active[dest] = true;
+
+            if(depth == MAX_BDFS_DEPTH - 1){
+                *finished = false;
+                uint prior = finalDist >> package_interval;
+                prior = prior < package_num ? prior : package_num - 1;
+                min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
+                queue[prior].push(dest);
+            }
+
+        }
+        if (active[dest])
+            rebfs(dest, depth + 1, offset, edgeList, outDegree, value, active, finished, queue);
+    }
+}
 
 template<class E>
 void __attribute__((linx_kernel, noinline))
 bfs_async(uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, queue<uint> *queue){
     bool finished = false;
-    uint priority = 0;
-    uint min_prior;
-    uint update_times = 0;
+
 
     while (!finished || priority < package_num){
         finished = true;
@@ -86,35 +118,62 @@ bfs_async(uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active,
         queue[priority].pop();
 
         if(active[id]){
-            active[id] = false;
-            uint Dist = value[id];
             min_prior = priority;
             //value[id] = Dist;
-            uint nbegin = offset[id];
-            uint nend = nbegin + outDegree[id];
-            uint finalDist = Dist + 1;
+            rebfs(id, 0, offset, edgeList, outDegree, value, active, &finished, queue);
 
-            for(uint j = nbegin; j < nend; j ++){
-                uint dest = edgeList[j].end;
-                if(finalDist < value[dest]){
-                    update_times ++;
-                    active[dest] = true;
-                    finished = false;
-                    value[dest] = finalDist;
-                    uint prior = finalDist >> package_interval;
-                    prior = prior < package_num ? prior : package_num - 1;
-                    min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
-                    queue[prior].push(dest);
-                }
-            }
             priority = min_prior;
         }
 
         while(priority < package_num && queue[priority].empty())
             priority++;
     }
-    cout<<"update times: "<<update_times<<endl;
+    cout<<"update times: "<<update<<endl;
 }
+
+//template<class E>
+//void __attribute__((linx_kernel, noinline))
+//bfs_async(uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, queue<uint> *queue){
+//    bool finished = false;
+//    uint priority = 0;
+//    uint min_prior;
+//    uint update_times = 0;
+//
+//    while (!finished || priority < package_num){
+//        finished = true;
+//        uint id = queue[priority].front();
+//        queue[priority].pop();
+//
+//        if(active[id]){
+//            active[id] = false;
+//            uint Dist = value[id];
+//            min_prior = priority;
+//            //value[id] = Dist;
+//            uint nbegin = offset[id];
+//            uint nend = nbegin + outDegree[id];
+//            uint finalDist = Dist + 1;
+//
+//            for(uint j = nbegin; j < nend; j ++){
+//                uint dest = edgeList[j].end;
+//                if(finalDist < value[dest]){
+//                    update_times ++;
+//                    active[dest] = true;
+//                    finished = false;
+//                    value[dest] = finalDist;
+//                    uint prior = finalDist >> package_interval;
+//                    prior = prior < package_num ? prior : package_num - 1;
+//                    min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
+//                    queue[prior].push(dest);
+//                }
+//            }
+//            priority = min_prior;
+//        }
+//
+//        while(priority < package_num && queue[priority].empty())
+//            priority++;
+//    }
+//    cout<<"update times: "<<update_times<<endl;
+//}
 
 
 template<class E>
@@ -167,7 +226,6 @@ void __attribute__((linx_kernel, noinline))
 cc_async(uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, queue<uint> queue){
 
     uint update_times = 0;
-
     for(uint i = 0; i < num_nodes; i ++){
 
         if(active[i]){
