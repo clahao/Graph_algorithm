@@ -18,8 +18,7 @@ int main(int argc, char ** argv){
         graph.label1[i] = true;
     }
 
-    queue<uint> queue;
-    //queue[0].push(sourceNode);
+    //queue<uint> queue;
     Timer timer;
     timer.Start();
 
@@ -29,7 +28,7 @@ int main(int argc, char ** argv){
              graph.outDegree,
              graph.value,
              graph.label1,
-              queue);
+             graph.queue[0]);
 
     float runtime = timer.Finish();
     cout << "Processing finished in " << runtime/1000 << " (s).\n";

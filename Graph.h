@@ -26,6 +26,7 @@ public:
     Adouble *delta2;
     Adouble *pr_value;
     uint *value;
+    uint *queue[package_num];
 
     Graph(string filename, bool _isWeighted);
 

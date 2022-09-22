@@ -35,14 +35,15 @@ Graph<E>::Graph(string filename, bool _isWeighted) {
     num_edges = stoi(line.substr(pos + 1));
     getline(ifs, line);
 
+    char c = '\t';
 
     for (int i = 0; i < num_edges; i++) {
         getline(ifs, line);
-        pos = line.find('\t');
+        pos = line.find(c);
         line = line.substr(pos + 1);
         pos = line.find(' ');
         uint dest = stoi(line.substr(0, pos));
-        num_nodes = max(num_nodes, dest);
+        num_nodes = max(num_nodes, dest + 1);
     }
     printf("%d %d\n", num_nodes, num_edges);
     ifs.seekg(0);
@@ -59,12 +60,15 @@ Graph<E>::Graph(string filename, bool _isWeighted) {
     pr_value = (Adouble *)malloc(num_nodes * sizeof(Adouble));
     value = (uint *)malloc(num_nodes * sizeof(uint));
 
+    for(int i = 0; i < package_num; i ++)
+        queue[i] = (uint *)malloc(num_nodes * sizeof(uint));
+
     for (int i = 0; i < num_nodes; i++)
         outDegree[i] = 0;
 
     for (int i = 0; i < num_edges; i++) {
         getline(ifs, line);
-        pos = line.find('\t');
+        pos = line.find(c);
         uint source = stoi(line.substr(0, pos));
         uint dest = stoi(line.substr(pos + 1));
         outDegree[source] ++;
