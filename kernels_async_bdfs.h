@@ -32,6 +32,28 @@ void rebfs(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *
 }
 
 template<class E>
+void resssp(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, bool *finished) {
+    if (depth == MAX_BDFS_DEPTH)
+        return;
+    active[id] = false;
+    uint nbegin = offset[id];
+    uint nend = nbegin + outDegree[id];
+
+    for(uint j = nbegin; j < nend; j ++){
+        uint dest = edgeList[j].end;
+        uint finalDist = value[id] + edgeList[j].w8;
+        if(finalDist < value[dest]){
+            update++;
+            value[dest] = finalDist;
+            *finished = false;
+            active[dest] = true;
+        }
+        if (active[dest])
+            rebfs(dest, depth + 1, offset, edgeList, outDegree, value, active, finished);
+    }
+}
+
+template<class E>
 void recc(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, bool *finished) {
     if (depth == MAX_BDFS_DEPTH)
         return;
@@ -87,6 +109,8 @@ template<class E>
 void __attribute__((linx_kernel, noinline))
 bfs_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active){
 
+    stack<pair<uint, uint>> bdfs_stack;
+    int size = 0;
     bool finished = false;
     while (!finished){
         finished = true;
@@ -94,6 +118,37 @@ bfs_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree
         for(uint id = 0; id < num_nodes; id ++){
             if(active[id]){
                 rebfs(id, 0, offset, edgeList, outDegree, value, active, &finished);
+//                active[id] = false;
+//
+//                bdfs_stack.push(make_pair(id, 0));
+//                size = 1;
+//                while (size != 0) {
+//                    uint top_id = bdfs_stack.top().first;
+//                    uint top_offset = bdfs_stack.top().second;
+//                    bool pushed = false;
+//                    uint finalDist = value[top_id] + 1;
+//                    for (uint j = top_offset; j < outDegree[top_id]; j++) {
+//                        uint dest = edgeList[offset[top_id] + j].end;
+//                        if (finalDist < value[dest]) {
+//                            update++;
+//                            value[dest] = finalDist;
+//                            finished = false;
+//                            active[dest] = true;
+//                        }
+//                        if (active[dest] && size < MAX_BDFS_DEPTH) {
+//                            active[dest] = false;
+//                            bdfs_stack.top().second = j + 1;
+//                            bdfs_stack.push(make_pair(dest, 0));
+//                            size++;
+//                            pushed = true;
+//                            break;
+//                        }
+//                    }
+//                    if (!pushed) {
+//                        bdfs_stack.pop();
+//                        size--;
+//                    }
+//                }
             }
         }
         (*iter) ++;
@@ -112,18 +167,7 @@ sssp_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegre
 
         for(uint id = 0; id < num_nodes; id ++){
             if(active[id]){
-                active[id] = false;
-                uint nbegin = offset[id];
-                uint nend = nbegin + outDegree[id];
-
-                for(uint j = nbegin; j < nend; j ++){
-                    uint finalDist = value[id] + edgeList[j].w8;
-                    if(finalDist < value[edgeList[j].end]){
-                        value[edgeList[j].end] = finalDist;
-                        finished = false;
-                        active[edgeList[j].end] = true;
-                    }
-                }
+                resssp(id, 0, offset, edgeList, outDegree, value, active, &finished);
             }
         }
         (*iter) ++;
