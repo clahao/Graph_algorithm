@@ -19,19 +19,19 @@ int main(int argc, char ** argv){
     }
     graph.value[sourceNode] = 0;
     graph.label1[sourceNode] = true;
-    //IndexMinPriorityQueue<uint> queue(graph.num_nodes);
-    //queue.insert(sourceNode,0);
-    queue<uint> queue[package_num];
-    queue[0].push(sourceNode);
+    graph.queue[0][sourceNode] = 0;
+//    queue<uint> queue[package_num];
+//    queue[0].push(sourceNode);
     Timer timer;
     timer.Start();
 
-    sssp_async(graph.offset,
+    sssp_async(graph.num_nodes,
+               graph.offset,
                graph.edgeList,
                graph.outDegree,
                graph.value,
                graph.label1,
-                queue);
+               graph.queue);
 
     float runtime = timer.Finish();
     cout << "Processing finished in " << runtime/1000 << " (s).\n";
