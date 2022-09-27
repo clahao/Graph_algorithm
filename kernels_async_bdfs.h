@@ -6,19 +6,36 @@
 #define GRAPH_ALGORITHM_KERNELS_ASYNC_BDFS_H
 
 #include "global.h"
+#include "timer.h"
 
 int update = 0;
+Timer timer;
+double stm = 0;
 
 template<class E>
 void rebfs(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, bool *finished) {
     if (depth == MAX_BDFS_DEPTH)
         return;
+    clock_t start, finish;
+//    LARGE_INTEGER t1,t2,tc;
+//    QueryPerformanceFrequency(&tc);
+//    QueryPerformanceCounter(&t1);
+    start = clock();
+//    timer.Start();
     active[id] = false;
     uint nbegin = offset[id];
     uint nend = nbegin + outDegree[id];
     uint finalDist = value[id] + 1;
+    finish = clock();
+    stm += (double) (finish - start);
+//    stm += timer.Finish();
+//    QueryPerformanceCounter(&t2);
+//    stm += (double) (t2.QuadPart - t1.QuadPart) / (double) tc.QuadPart;
 
     for(uint j = nbegin; j < nend; j ++){
+//        timer.Start();
+        start = clock();
+//        QueryPerformanceCounter(&t1);
         uint dest = edgeList[j].end;
         if(finalDist < value[dest]){
             update++;
@@ -26,6 +43,11 @@ void rebfs(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *
             *finished = false;
             active[dest] = true;
         }
+        finish = clock();
+        stm += (double) (finish - start);
+//        stm += timer.Finish();
+//        QueryPerformanceCounter(&t2);
+//        stm += (double) (t2.QuadPart - t1.QuadPart) / (double) tc.QuadPart;
         if (active[dest])
             rebfs(dest, depth + 1, offset, edgeList, outDegree, value, active, finished);
     }
@@ -49,7 +71,7 @@ void resssp(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint 
             active[dest] = true;
         }
         if (active[dest])
-            rebfs(dest, depth + 1, offset, edgeList, outDegree, value, active, finished);
+            resssp(dest, depth + 1, offset, edgeList, outDegree, value, active, finished);
     }
 }
 
@@ -109,8 +131,9 @@ template<class E>
 void __attribute__((linx_kernel, noinline))
 bfs_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active){
 
-    stack<pair<uint, uint>> bdfs_stack;
-    int size = 0;
+//    stack<pair<uint, uint>> bdfs_stack;
+//    int size = 0;
+    stm = 0;
     bool finished = false;
     while (!finished){
         finished = true;
@@ -154,6 +177,7 @@ bfs_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree
         (*iter) ++;
     }
     cout << update << endl;
+    cout << "compute time " << stm / 1000 << endl;
 }
 
 template<class E>

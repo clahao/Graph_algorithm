@@ -22,7 +22,7 @@
 #include <sstream>
 #include <atomic>
 
-#define MAX_BDFS_DEPTH 10
+#define MAX_BDFS_DEPTH 5
 
 using namespace std;
 using Adouble = atomic<double>;
