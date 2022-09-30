@@ -7,65 +7,75 @@
 
 #include <queue>
 #include "global.h"
+#include "timer.h"
+#include "timing_util.hpp"
+#include <windows.h>
 
-//int update = 0;
-//uint priority = 0;
-//uint min_prior;
+int update = 0;
+uint priority = 0;
+uint min_prior;
 //
-//template<class E>
-//void rebfs(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, bool *finished, queue<uint> *queue) {
-//    if (depth == MAX_BDFS_DEPTH)
-//        return;
-//    active[id] = false;
-//    uint nbegin = offset[id];
-//    uint nend = nbegin + outDegree[id];
-//    uint finalDist = value[id] + 1;
-//
-//    for(uint j = nbegin; j < nend; j ++){
-//        uint dest = edgeList[j].end;
-//        if(finalDist < value[dest]){
-//            //update++;
-//            value[dest] = finalDist;
-//            active[dest] = true;
-//
-//            if(depth == MAX_BDFS_DEPTH - 1){
-//                *finished = false;
-//                uint prior = finalDist >> package_interval;
-//                prior = prior < package_num ? prior : package_num - 1;
-//                min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
-//                queue[prior].push(dest);
-//            }
-//
-//        }
-//        if (active[dest])
-//            rebfs(dest, depth + 1, offset, edgeList, outDegree, value, active, finished, queue);
-//    }
-//}
-//
-//template<class E>
-//void __attribute__((linx_kernel, noinline))
-//bfs_async(uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, queue<uint> *queue){
-//    bool finished = false;
-//
-//
-//    while (!finished || priority < package_num){
-//        finished = true;
-//        uint id = queue[priority].front();
-//        queue[priority].pop();
-//
-//        if(active[id]){
-//            min_prior = priority;
-//            //value[id] = Dist;
-//            rebfs(id, 0, offset, edgeList, outDegree, value, active, &finished, queue);
-//
-//            priority = min_prior;
-//        }
-//
-//        while(priority < package_num && queue[priority].empty())
-//            priority++;
-//    }
-//    //cout<<"update times: "<<update<<endl;
-//}
+template<class E>
+void rebfs(int id, int depth, uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, bool *finished, uint **queue, uint *queue_end) {
+    if (depth == MAX_BDFS_DEPTH)
+        return;
+    active[id] = false;
+    uint nbegin = offset[id];
+    uint nend = nbegin + outDegree[id];
+    uint finalDist = value[id] + 1;
+
+    for(uint j = nbegin; j < nend; j ++){
+        uint dest = edgeList[j].end;
+        if(finalDist < value[dest]){
+            //update++;
+            value[dest] = finalDist;
+            active[dest] = true;
+
+            if(depth == MAX_BDFS_DEPTH - 1){
+                *finished = false;
+                uint prior = finalDist >> package_interval;
+                prior = prior < package_num ? prior : package_num - 1;
+                min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
+                queue[prior][queue_end[prior] ++] = dest;
+                queue_end[priority] = queue_end[priority] % num_nodes;
+            }
+
+        }
+        if (active[dest])
+            rebfs(dest, depth + 1, num_nodes, offset, edgeList, outDegree, value, active, finished, queue, queue_end);
+    }
+}
+
+template<class E>
+void __attribute__((linx_kernel, noinline))
+bfs_async(uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, uint **queue){
+    bool finished = false;
+    uint queue_start[package_num];
+    uint queue_end[package_num];
+    for(int i = 0; i < package_num; i ++){
+        queue_start[i] = 0;
+        queue_end[i] = 0;
+    }
+    queue_end[0] ++;
+
+    while (!finished || priority < package_num){
+        finished = true;
+        uint id = queue[priority][queue_start[priority] ++];
+        queue_start[priority] = queue_start[priority] % num_nodes;
+
+        if(active[id]){
+            min_prior = priority;
+            //value[id] = Dist;
+            rebfs(id, 0, num_nodes, offset, edgeList, outDegree, value, active, &finished, queue, queue_end);
+
+            priority = min_prior;
+        }
+
+        while(priority < package_num && (queue_start[priority] == queue_end[priority]))
+            priority++;
+    }
+    //cout<<"update times: "<<update<<endl;
+}
 
 //template<class E>
 //void __attribute__((linx_kernel, noinline))
@@ -111,58 +121,69 @@
 //    //cout<<"update times: "<<update_times<<endl;
 //}
 
-
-template<class E>
-void __attribute__((linx_kernel, noinline))
-bfs_async(uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, uint **queue){
-    bool finished = false;
-    uint priority = 0;
-    uint min_prior;
-    uint queue_start[package_num];
-    uint queue_end[package_num];
-    for(int i = 0; i < package_num; i ++){
-        queue_start[i] = 0;
-        queue_end[i] = 0;
-    }
-    queue_end[0] ++;
-    //uint update_times = 0;
-
-    while (!finished || priority < package_num){
-        finished = true;
-        uint id = queue[priority][queue_start[priority] ++];
-        queue_start[priority] = queue_start[priority] % num_nodes;
-
-        if(active[id]){
-            active[id] = false;
-            uint Dist = value[id];
-            min_prior = priority;
-            //value[id] = Dist;
-            uint nbegin = offset[id];
-            uint nend = nbegin + outDegree[id];
-            uint finalDist = Dist + 1;
-
-            for(uint j = nbegin; j < nend; j ++){
-                uint dest = edgeList[j].end;
-                if(finalDist < value[dest]){
-                    //update_times ++;
-                    active[dest] = true;
-                    finished = false;
-                    value[dest] = finalDist;
-                    uint prior = finalDist >> package_interval;
-                    prior = prior < package_num ? prior : package_num - 1;
-                    min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
-                    queue[prior][queue_end[prior] ++] = dest;
-                    queue_end[priority] = queue_end[priority] % num_nodes;
-                }
-            }
-            priority = min_prior;
-        }
-
-        while(priority < package_num && (queue_start[priority] == queue_end[priority]))
-            priority++;
-    }
-    //cout<<"update times: "<<update_times<<endl;
-}
+//template<class E>
+//void __attribute__((linx_kernel, noinline))
+//bfs_async(uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, uint **queue){
+////    float calculate_time = 0;
+////    ll calculate_time = 0;
+//    bool finished = false;
+////    TIMER_START(x);
+//    uint priority = 0;
+//    uint min_prior;
+//    uint queue_start[package_num];
+//    uint queue_end[package_num];
+//    for(int i = 0; i < package_num; i ++){
+//        queue_start[i] = 0;
+//        queue_end[i] = 0;
+//    }
+//    queue_end[0] ++;
+////    TIMER_STOP(x);
+////    calculate_time += TIMER_NSEC(x);
+//
+//    uint update_times = 0;
+//
+//    while (!finished || priority < package_num){
+//        finished = true;
+//        uint id = queue[priority][queue_start[priority] ++];
+//        queue_start[priority] = queue_start[priority] % num_nodes;
+//
+//        if(active[id]){
+//            min_prior = priority;
+////            TIMER_START(x);
+//            active[id] = false;
+//            uint Dist = value[id];
+//            uint nbegin = offset[id];
+//            uint nend = nbegin + outDegree[id];
+//            uint finalDist = Dist + 1;
+////            TIMER_STOP(x);
+////            calculate_time += TIMER_NSEC(x);
+//
+//            for(uint j = nbegin; j < nend; j ++){
+//                uint dest = edgeList[j].end;
+//                if(finalDist < value[dest]){
+//                    update_times ++;
+////                    TIMER_START(x);
+//                    active[dest] = true;
+//                    finished = false;
+//                    value[dest] = finalDist;
+////                    TIMER_STOP(x);
+////                    calculate_time += TIMER_NSEC(x);
+//                    uint prior = finalDist >> package_interval;
+//                    prior = prior < package_num ? prior : package_num - 1;
+//                    min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
+//                    queue[prior][queue_end[prior] ++] = dest;
+//                    queue_end[priority] = queue_end[priority] % num_nodes;
+//                }
+//            }
+//            priority = min_prior;
+//        }
+//
+//        while(priority < package_num && (queue_start[priority] == queue_end[priority]))
+//            priority++;
+//    }
+////    cout << "calculate time: " << calculate_time / 1e9 <<  " (ns).\n";
+////    cout << "update times: " << update_times << endl;
+//}
 
 
 //template<class E>
@@ -223,7 +244,7 @@ sssp_async(uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *val
         queue_end[i] = 0;
     }
     queue_end[0] ++;
-    //uint update_times = 0;
+    uint update_times = 0;
 
     while (!finished || priority < package_num){
         finished = true;
@@ -242,7 +263,7 @@ sssp_async(uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *val
                 uint dest = edgeList[j].end;
                 uint finalDist = Dist + edgeList[j].w8;
                 if(finalDist < value[dest]){
-                    //update_times ++;
+                    update_times ++;
                     active[dest] = true;
                     finished = false;
                     value[dest] = finalDist;
@@ -259,7 +280,7 @@ sssp_async(uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *val
         while(priority < package_num && (queue_start[priority] == queue_end[priority]))
             priority++;
     }
-    //cout<<"update times: "<<update_times<<endl;
+    cout << "update times: " << update_times << endl;
 }
 
 
