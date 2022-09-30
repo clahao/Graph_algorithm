@@ -6,48 +6,40 @@
 #define GRAPH_ALGORITHM_KERNELS_ASYNC_BDFS_H
 
 #include "global.h"
-#include "timer.h"
 
 int update = 0;
-Timer timer;
+//Timer timer;
 double stm = 0;
+
+template<class E>
+void compute2(int id, uint j, E *edgeList, uint dest, uint *value, bool *active, bool *finished) {
+    uint finalDist = value[id] + 1;
+    if (finalDist < value[dest]) {
+        update++;
+        value[dest] = finalDist;
+        *finished = false;
+        active[dest] = true;
+    }
+}
 
 template<class E>
 void rebfs(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, bool *finished) {
     if (depth == MAX_BDFS_DEPTH)
         return;
-    clock_t start, finish;
-//    LARGE_INTEGER t1,t2,tc;
-//    QueryPerformanceFrequency(&tc);
-//    QueryPerformanceCounter(&t1);
-    start = clock();
-//    timer.Start();
     active[id] = false;
-    uint nbegin = offset[id];
-    uint nend = nbegin + outDegree[id];
-    uint finalDist = value[id] + 1;
-    finish = clock();
-    stm += (double) (finish - start);
-//    stm += timer.Finish();
-//    QueryPerformanceCounter(&t2);
-//    stm += (double) (t2.QuadPart - t1.QuadPart) / (double) tc.QuadPart;
+//    uint finalDist = value[id] + 1;
+//    uint nbegin = offset[id];
+//    uint nend = nbegin + outDegree[id];
 
-    for(uint j = nbegin; j < nend; j ++){
-//        timer.Start();
-        start = clock();
-//        QueryPerformanceCounter(&t1);
+    for(uint j = offset[id]; j < offset[id] + outDegree[id]; j ++){
         uint dest = edgeList[j].end;
-        if(finalDist < value[dest]){
-            update++;
-            value[dest] = finalDist;
-            *finished = false;
-            active[dest] = true;
-        }
-        finish = clock();
-        stm += (double) (finish - start);
-//        stm += timer.Finish();
-//        QueryPerformanceCounter(&t2);
-//        stm += (double) (t2.QuadPart - t1.QuadPart) / (double) tc.QuadPart;
+//        if(finalDist < value[dest]){
+//            update++;
+//            value[dest] = finalDist;
+//            *finished = false;
+//            active[dest] = true;
+//        }
+        compute2(id, j, edgeList, dest, value, active, finished);
         if (active[dest])
             rebfs(dest, depth + 1, offset, edgeList, outDegree, value, active, finished);
     }
@@ -58,18 +50,19 @@ void resssp(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint 
     if (depth == MAX_BDFS_DEPTH)
         return;
     active[id] = false;
-    uint nbegin = offset[id];
-    uint nend = nbegin + outDegree[id];
+//    uint nbegin = offset[id];
+//    uint nend = nbegin + outDegree[id];
 
-    for(uint j = nbegin; j < nend; j ++){
+    for(uint j = offset[id]; j < offset[id] + outDegree[id]; j ++){
         uint dest = edgeList[j].end;
-        uint finalDist = value[id] + edgeList[j].w8;
-        if(finalDist < value[dest]){
-            update++;
-            value[dest] = finalDist;
-            *finished = false;
-            active[dest] = true;
-        }
+//        uint finalDist = value[id] + edgeList[j].w8;
+//        if(finalDist < value[dest]){
+//            update++;
+//            value[dest] = finalDist;
+//            *finished = false;
+//            active[dest] = true;
+//        }
+        compute2(id, j, edgeList, dest, value, active, finished);
         if (active[dest])
             resssp(dest, depth + 1, offset, edgeList, outDegree, value, active, finished);
     }
@@ -80,10 +73,8 @@ void recc(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *v
     if (depth == MAX_BDFS_DEPTH)
         return;
     active[id] = false;
-    uint nbegin = offset[id];
-    uint nend = nbegin + outDegree[id];
 
-    for(uint j = nbegin; j < nend; j ++){
+    for(uint j = offset[id]; j < offset[id] + outDegree[id]; j ++){
         uint dest = edgeList[j].end;
         if(value[id] < value[dest]){
             update++;
@@ -91,8 +82,9 @@ void recc(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *v
             *finished = false;
             active[dest] = true;
         }
+//        compute2(id, j, edgeList, dest, value, active, finished);
         if (active[dest])
-            rebfs(dest, depth + 1, offset, edgeList, outDegree, value, active, finished);
+            recc(dest, depth + 1, offset, edgeList, outDegree, value, active, finished);
     }
 }
 
@@ -177,7 +169,7 @@ bfs_async(uint num_nodes, uint *iter, uint *offset, E *edgeList, uint *outDegree
         (*iter) ++;
     }
     cout << update << endl;
-    cout << "compute time " << stm / 1000 << endl;
+    cout << "compute2 time " << stm / 1000 << endl;
 }
 
 template<class E>

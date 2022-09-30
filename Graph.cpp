@@ -35,7 +35,7 @@ Graph<E>::Graph(string filename, bool _isWeighted) {
     num_edges = stoi(line.substr(pos + 1));
     getline(ifs, line);
 
-    char c = '\t';
+    char c = ' ';
 
     for (int i = 0; i < num_edges; i++) {
         getline(ifs, line);

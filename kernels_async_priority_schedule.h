@@ -111,6 +111,25 @@
 //    //cout<<"update times: "<<update_times<<endl;
 //}
 
+uint compute1(uint **queue, uint priority, uint *queue_start, uint num_nodes) {
+    uint id = queue[priority][queue_start[priority]++];
+    queue_start[priority] = queue_start[priority] % num_nodes;
+    return id;
+}
+
+uint compute2(uint min_prior, uint finalDist, uint **queue, uint *queue_end, uint num_nodes, uint dest, uint priority) {
+    uint prior = finalDist >> package_interval;
+    prior = prior < package_num ? prior : package_num - 1;
+    min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
+    queue[prior][queue_end[prior]++] = dest;
+    queue_end[priority] = queue_end[priority] % num_nodes;
+    return min_prior;
+}
+
+void compute3(uint &priority, uint *queue_start, uint *queue_end) {
+    while(priority < package_num && (queue_start[priority] == queue_end[priority]))
+        priority++;
+}
 
 template<class E>
 void __attribute__((linx_kernel, noinline))
@@ -129,8 +148,9 @@ bfs_async(uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *valu
 
     while (!finished || priority < package_num){
         finished = true;
-        uint id = queue[priority][queue_start[priority] ++];
-        queue_start[priority] = queue_start[priority] % num_nodes;
+        uint id = compute1(queue, priority, queue_start, num_nodes);
+//        uint id = queue[priority][queue_start[priority] ++];
+//        queue_start[priority] = queue_start[priority] % num_nodes;
 
         if(active[id]){
             active[id] = false;
@@ -148,18 +168,21 @@ bfs_async(uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *valu
                     active[dest] = true;
                     finished = false;
                     value[dest] = finalDist;
-                    uint prior = finalDist >> package_interval;
-                    prior = prior < package_num ? prior : package_num - 1;
-                    min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
-                    queue[prior][queue_end[prior] ++] = dest;
-                    queue_end[priority] = queue_end[priority] % num_nodes;
+
+                    min_prior = compute2(min_prior, finalDist, queue, queue_end, num_nodes, dest, priority);
+//                    uint prior = finalDist >> package_interval;
+//                    prior = prior < package_num ? prior : package_num - 1;
+//                    min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
+//                    queue[prior][queue_end[prior] ++] = dest;
+//                    queue_end[priority] = queue_end[priority] % num_nodes;
                 }
             }
             priority = min_prior;
         }
 
-        while(priority < package_num && (queue_start[priority] == queue_end[priority]))
-            priority++;
+        compute3(priority, queue_start, queue_end);
+//        while(priority < package_num && (queue_start[priority] == queue_end[priority]))
+//            priority++;
     }
     //cout<<"update times: "<<update_times<<endl;
 }
@@ -227,8 +250,9 @@ sssp_async(uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *val
 
     while (!finished || priority < package_num){
         finished = true;
-        uint id = queue[priority][queue_start[priority] ++];
-        queue_start[priority] = queue_start[priority] % num_nodes;
+        uint id = compute1(queue, priority, queue_start, num_nodes);
+//        uint id = queue[priority][queue_start[priority] ++];
+//        queue_start[priority] = queue_start[priority] % num_nodes;
 
         if(active[id]){
             active[id] = false;
@@ -246,18 +270,20 @@ sssp_async(uint num_nodes, uint *offset, E *edgeList, uint *outDegree, uint *val
                     active[dest] = true;
                     finished = false;
                     value[dest] = finalDist;
-                    uint prior = finalDist >> package_interval;
-                    prior = prior < package_num ? prior : package_num - 1;
-                    min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
-                    queue[prior][queue_end[prior] ++] = dest;
-                    queue_end[priority] = queue_end[priority] % num_nodes;
+
+                    min_prior = compute2(min_prior, finalDist, queue, queue_end, num_nodes, dest, priority);
+//                    uint prior = finalDist >> package_interval;
+//                    prior = prior < package_num ? prior : package_num - 1;
+//                    min_prior = min_prior < prior ? min_prior : prior;//min(min_prior,prior);
+//                    queue[prior][queue_end[prior] ++] = dest;
+//                    queue_end[priority] = queue_end[priority] % num_nodes;
                 }
             }
             priority = min_prior;
         }
-
-        while(priority < package_num && (queue_start[priority] == queue_end[priority]))
-            priority++;
+        compute3(priority, queue_start, queue_end);
+//        while(priority < package_num && (queue_start[priority] == queue_end[priority]))
+//            priority++;
     }
     //cout<<"update times: "<<update_times<<endl;
 }

@@ -15,7 +15,7 @@
 int main(int argc, char ** argv){
     string filename(argv[1]);
     Graph<OutEdge> graph(filename, false);
-    int sourceNode = 1;
+    int sourceNode = 0;
 
     for(unsigned int i = 0; i < graph.num_nodes; i ++){
         graph.value[i] = DIST_INFINITY;
