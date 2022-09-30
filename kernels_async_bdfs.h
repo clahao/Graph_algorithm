@@ -16,26 +16,12 @@ template<class E>
 void rebfs(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *value, bool *active, bool *finished) {
     if (depth == MAX_BDFS_DEPTH)
         return;
-    clock_t start, finish;
-//    LARGE_INTEGER t1,t2,tc;
-//    QueryPerformanceFrequency(&tc);
-//    QueryPerformanceCounter(&t1);
-    start = clock();
-//    timer.Start();
     active[id] = false;
     uint nbegin = offset[id];
     uint nend = nbegin + outDegree[id];
     uint finalDist = value[id] + 1;
-    finish = clock();
-    stm += (double) (finish - start);
-//    stm += timer.Finish();
-//    QueryPerformanceCounter(&t2);
-//    stm += (double) (t2.QuadPart - t1.QuadPart) / (double) tc.QuadPart;
 
     for(uint j = nbegin; j < nend; j ++){
-//        timer.Start();
-        start = clock();
-//        QueryPerformanceCounter(&t1);
         uint dest = edgeList[j].end;
         if(finalDist < value[dest]){
             update++;
@@ -43,11 +29,6 @@ void rebfs(int id, int depth, uint *offset, E *edgeList, uint *outDegree, uint *
             *finished = false;
             active[dest] = true;
         }
-        finish = clock();
-        stm += (double) (finish - start);
-//        stm += timer.Finish();
-//        QueryPerformanceCounter(&t2);
-//        stm += (double) (t2.QuadPart - t1.QuadPart) / (double) tc.QuadPart;
         if (active[dest])
             rebfs(dest, depth + 1, offset, edgeList, outDegree, value, active, finished);
     }
