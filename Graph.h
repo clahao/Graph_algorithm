@@ -17,8 +17,12 @@ public:
     uint num_nodes;     // 图顶点数
     uint num_edges;     // 边数
     uint *offset;       // CSR顶点偏移量数组
-    E *edgeList;        // CSR边数组
+    E *edgeList;        // 边数组
+    uint *_offset;      // CSC顶点偏移量数组
+    E *_edgeList;       // 边数组
 
+    uint *weight;
+    uint *inDegree;
     uint *outDegree;
     bool *label1;
     bool *label2;
@@ -27,10 +31,12 @@ public:
     Adouble *pr_value;
     uint *value;
     uint *queue[package_num];
+    uint *index;
 
     Graph(string filename, bool _isWeighted);
 
     void AssignW8(uint w8, uint index);
+    void _AssignW8(uint w8, uint index);
 
 };
 #endif //GRAPH_ALGORITHM_GRAPH_H

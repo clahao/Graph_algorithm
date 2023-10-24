@@ -19,7 +19,7 @@ int main(int argc, char ** argv){
     }
     graph.value[sourceNode] = 0;
     graph.label1[sourceNode] = true;
-    graph.queue[0][sourceNode] = 0;
+    graph.queue[0][0] = sourceNode;
 //    queue<uint> queue[package_num];
 //    queue[0].push(sourceNode);
     Timer timer;

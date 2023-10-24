@@ -39,7 +39,7 @@ int main(int argc, char ** argv){
     float runtime = timer.Finish();
     cout << "Processing finished in " << runtime/1000 << " (s).\n";
 
-    for(int i = 0; i < 20; i ++){
+    for(int i = 0; i < 50; i ++){
         cout << graph.value[i] << " ";
     }
     cout <<endl;

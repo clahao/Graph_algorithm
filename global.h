@@ -20,14 +20,16 @@
 #include <stdexcept>
 #include <sstream>
 #include <atomic>
+#include <queue>
 
 
 using namespace std;
-using Adouble = atomic<double>;
+using Adouble = double;//atomic<double>;
 const unsigned int DIST_INFINITY = std::numeric_limits<unsigned int>::max() - 1;
 
 typedef unsigned int uint;
 typedef unsigned long long ll;
+#define MAX_BDFS_DEPTH 5
 #define damping_factor 0.85
 #define threshold 0.001
 //#define heap_factor 0.005

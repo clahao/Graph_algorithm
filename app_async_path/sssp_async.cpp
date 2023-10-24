@@ -1,45 +1,54 @@
 //
-// Created by moyu on 2022/9/14.
+// Created by moyu on 2022/9/27.
 //
+
 #include "../Graph.h"
 #include "../Graph.cpp"
-#if defined(OPENMP)
-#include "../kernels_async_parallel.h"
-#else
-#include "../kernels_async.h"
-//#include "../kernels_async_dev.h"
-#endif
+#include "../kernels_async_path.h"
 #include "../timer.h"
+
 
 int main(int argc, char ** argv){
     string filename(argv[1]);
     Graph<OutEdgeWeighted> graph(filename, true);
-    int sourceNode = 0;
+    uint sourceNode = 0;
+
+    uint *RRG = (uint *)malloc(graph.num_nodes * sizeof(uint));
+    bool *visited = (bool *)malloc(graph.num_nodes * sizeof(bool));
+
     for(unsigned int i = 0; i < graph.num_nodes; i ++){
+        RRG[i] = 0;
+        visited[i] = false;
         graph.value[i] = DIST_INFINITY;
         graph.label1[i] = false;
+        graph.label2[i] = false;
     }
     graph.value[sourceNode] = 0;
     graph.label1[sourceNode] = true;
+    visited[sourceNode] = true;
 
-    uint itr = 0;   //迭代次数
     Timer timer;
     timer.Start();
 
     sssp_async(graph.num_nodes,
-               &itr,
                graph.offset,
                graph.edgeList,
                graph.outDegree,
+               graph._offset,
+               graph._edgeList,
+               graph.inDegree,
+                RRG,
                graph.value,
-               graph.label1);
+               graph.label1,
+               graph.label2,
+                visited);
 
-    cout << "iteration times: " << itr << endl;
     float runtime = timer.Finish();
     cout << "Processing finished in " << runtime/1000 << " (s).\n";
 
-    for(int i = 0; i < 100; i ++){
-        cout << graph.value[i] << " ";
+    for(int i = 0; i < graph.num_nodes; i ++){
+        cout << RRG[i] << " ";
+//        cout << graph.value[i] << " ";
     }
     cout <<endl;
     return 0;

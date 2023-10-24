@@ -16,11 +16,11 @@ int main(int argc, char **argv) {
     srand((int)time(0));
     string line;
     getline(ifs, line);
-    ofs << line << endl;
+    //ofs << line << endl;
     getline(ifs, line);
-    ofs << line << endl;
+    //ofs << line << endl;
     getline(ifs, line);
-    ofs << line << endl;
+    //ofs << line << endl;
 
     line = line.substr(9);
     int pos = line.find(' ');
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     uint num_edges = stoi(line.substr(pos + 1));
 
     getline(ifs, line);
-    ofs << line << endl;
+    //ofs << line << endl;
 
 
     for (int i = 0; i < num_edges; i++) {
@@ -46,11 +46,12 @@ int main(int argc, char **argv) {
 
     for (int i = 0; i < num_edges; i++) {
         getline(ifs, line);
-        ofs << line << endl;
+//        ofs << line << endl;
+        ofs << line << " " << rand() % 100 + 1 << endl;
     }
-    for (int i = 0; i < num_edges; i++) {
-        ofs << rand() % 100 + 1 << endl;
-    }
+//    for (int i = 0; i < num_edges; i++) {
+//        ofs << rand() % 100 + 1 << endl;
+//    }
     ifs.close();
     ofs.close();
 

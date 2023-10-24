@@ -25,7 +25,7 @@ int main(int argc, char ** argv){
     Timer timer;
     timer.Start();
 
-    pagerank_async(graph.num_nodes,
+    pagerank_async_priority(graph.num_nodes,
                    &itr,
                    graph.offset,
                    graph.edgeList,
@@ -33,7 +33,7 @@ int main(int argc, char ** argv){
                    graph.pr_value,
                    graph.delta1);
 
-    cout << "iteration times: " << itr << endl;
+    cout << "processing times: " << itr << endl;
     float runtime = timer.Finish();
     cout << "Processing finished in " << runtime/1000 << " (s).\n";
 
